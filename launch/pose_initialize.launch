@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+    <rosparam file="$(find pose_initialzer)/config/param.yaml" command="load"/>
+
+    <node pkg="gps_common" type="utm_odometry_node" name="utm_odometry_node">
+        <remap from="fix" to="fix" />
+        <remap from="odom" to="gps/odom" />
+    </node>
+    <node pkg="pose_initialzer" type="pose_initialize_node" name="pose_initialize_node">
+        
+    </node>
+</launch>
