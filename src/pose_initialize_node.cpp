@@ -5,6 +5,7 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <nav_msgs/Odometry.h>
+#include <std_srvs/Trigger.h>
 
 using std::cos;
 using std::sin;
@@ -37,10 +38,12 @@ class PoseInitializer{
             pub_ = nh_.advertise<geometry_msgs::PoseWithCovarianceStamped> ("initialpose",1000);
             pub2_ = nh_.advertise<geometry_msgs::PoseWithCovarianceStamped> (gnss_pose_topic_,1000);
             sub_ = nh_.subscribe<nav_msgs::Odometry> (utm_topic_,1000, &PoseInitializer::callback,this);
+            srv_ = nh_.advertiseService("gnss_pose_initialize",&PoseInitializer::srvCallback,this);
         }
 
         void timer_callback(const ros::TimerEvent& e);
         void callback(const nav_msgs::Odometry utm_msg);
+        bool srvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
         double calc_pose_diff(const geometry_msgs::TransformStamped trans, const geometry_msgs::TransformStamped prev_trans);
         geometry_msgs::PoseWithCovariance subtract_map_origin(geometry_msgs::PoseWithCovariance from_pose);
 
@@ -51,6 +54,7 @@ class PoseInitializer{
         ros::Publisher pub_;
         ros::Publisher pub2_;
         ros::Subscriber sub_;
+        ros::ServiceServer srv_;
 
         tf2_ros::Buffer tfBuffer_;
         tf2_ros::TransformListener tfListener_;
@@ -94,7 +98,7 @@ PoseInitializer::timer_callback(const ros::TimerEvent& e){
 
     if(count_ >= (examine_duration_ / timer_duration_) ){
         if(sum_pose_diff_ <= 1.0){
-            ROS_WARN("low movement detected");
+            ROS_WARN("Low movement detected");
 
             geometry_msgs::PoseWithCovarianceStamped initialpose;
 
@@ -103,7 +107,7 @@ PoseInitializer::timer_callback(const ros::TimerEvent& e){
             initialpose.pose = map_gnss_pose_.pose;
 
             pub_.publish(initialpose);
-            ROS_INFO("publish gnss pose");
+            ROS_INFO("publish initialpose");
         }
         sum_pose_diff_ = 0;
         count_ = 0;
@@ -122,6 +126,25 @@ PoseInitializer::callback(const nav_msgs::Odometry utm_pose){
     map_gnss_pose_.header.stamp = ros::Time(0);
 
     pub2_.publish(map_gnss_pose_);
+}
+
+bool
+PoseInitializer::srvCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res){
+
+    ROS_INFO("GNSS Pose Initialize Service Requested");
+    ROS_INFO("publish initialpose");
+
+    geometry_msgs::PoseWithCovarianceStamped initialpose;
+
+    initialpose.header.frame_id = map_frame_;
+    initialpose.header.stamp = ros::Time(0);
+    initialpose.pose = map_gnss_pose_.pose;
+
+    pub_.publish(initialpose);
+    
+    res.success = true;
+
+    return res.success;
 }
 
 double 

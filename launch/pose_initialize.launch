@@ -5,13 +5,13 @@
         <remap from="fix" to="fix" />
         <remap from="odom" to="gps/odom" />
     </node>
-    <node pkg="pose_initializer" type="pose_initialize_node" name="pose_initialize_node">
+    <node pkg="gnss_pose_initializer" type="pose_initialize_node" name="pose_initialize_node">
         <param name="map_frame" value="map"/>
         <param name="odom_frame" value="odom"/>
         <param name="base_frame" value="base_link"/>
         <param name="utm_topic" value="gps/odom"/>
         <param name="gnss_pose_topic" value="gps/position"/>
-        <rosparam file="$(find pose_initializer)/config/map_origin.yaml" command="load"/>
+        <rosparam file="$(find gnss_pose_initializer)/config/map_origin.yaml" command="load"/>
 
         <param name="use_initializer" value="false"/>
         <param name="timer_duration" value="0.1"/>
