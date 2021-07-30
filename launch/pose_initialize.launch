@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <launch>
-    <rosparam file="$(find pose_initializer)/config/param.yaml" command="load"/>
 
     <node pkg="gps_common" type="utm_odometry_node" name="utm_odometry_node">
         <remap from="fix" to="ublox/fix" />
